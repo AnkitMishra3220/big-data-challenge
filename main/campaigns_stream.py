@@ -78,7 +78,7 @@ agg_df = joined_df \
 )
 
 # Write to Parquet partitioned by network_id and minute_timestamp
-parquet_query = agg_df.writeStream \
+query_1 = parquet_query = agg_df.writeStream \
     .format("parquet") \
     .outputMode("append") \
     .option("path", config['output_path']) \
@@ -88,7 +88,7 @@ parquet_query = agg_df.writeStream \
     .start()
 
 # Write to Kafka
-agg_df.selectExpr("to_json(struct(*)) AS value") \
+query_2 = agg_df.selectExpr("to_json(struct(*)) AS value") \
     .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", config['kafka_bootstrap_servers']) \
@@ -96,4 +96,5 @@ agg_df.selectExpr("to_json(struct(*)) AS value") \
     .option("checkpointLocation", f"{config['checkpoint_location']}/kafka") \
     .start()
 
-spark.streams.awaitAnyTermination()
+query_1.awaitTermination()
+query_2.awaitTermination()
