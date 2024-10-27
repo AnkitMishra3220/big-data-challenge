@@ -48,9 +48,6 @@ view_log_df = view_log_df.select(from_json(col("value").cast("string"), view_log
     .select("data.*") \
     .withColumn("view_duration", expr("cast((end_timestamp - start_timestamp) as double)"))
 
-# show view_log_df on console
-view_log_df.printSchema()
-
 # Join with static campaign data
 joined_df = view_log_df.join(broadcast(campaign_df), "campaign_id")
 
@@ -73,9 +70,8 @@ agg_df = joined_df.withWatermark("start_timestamp", config['watermark_delay']) \
     col("total_count")
 )
 
-
 # Write to Parquet partitioned by network_id and minute_timestamp
-query_1 = agg_df.writeStream \
+agg_df.writeStream \
     .format("parquet") \
     .outputMode("append") \
     .option("path", config['output_path']) \
@@ -84,15 +80,8 @@ query_1 = agg_df.writeStream \
     .trigger(processingTime=config['trigger_processing_time']) \
     .start()
 
-# write to console
-query_2 = agg_df.writeStream \
-    .format("console") \
-    .outputMode("append") \
-    .trigger(processingTime=config['trigger_processing_time']) \
-    .start()
-
 # Write to Kafka
-query_3 = agg_df.selectExpr("to_json(struct(*)) AS value") \
+agg_df.selectExpr("to_json(struct(*)) AS value") \
     .writeStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", config['kafka_bootstrap_servers']) \
@@ -100,9 +89,4 @@ query_3 = agg_df.selectExpr("to_json(struct(*)) AS value") \
     .option("checkpointLocation", config['checkpoint_location']) \
     .start()
 
-
 spark.streams.awaitAnyTermination()
-
-query_1.awaitTermination()
-query_2.awaitTermination()
-query_3.awaitTermination()
