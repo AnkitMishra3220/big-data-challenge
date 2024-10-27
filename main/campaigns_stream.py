@@ -1,6 +1,6 @@
 import json
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window, avg, count, expr, broadcast
+from pyspark.sql.functions import from_json, col, window, avg, count, expr, broadcast, unix_timestamp
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, TimestampType
 
 # Load configuration
@@ -51,7 +51,8 @@ view_log_df = spark \
 # Parse JSON data and create view duration
 parsed_df = view_log_df.select(from_json(col("value").cast("string"), view_log_schema).alias("data")) \
     .select("data.*") \
-    .withColumn("view_duration", expr("cast((end_timestamp - start_timestamp) as double)"))
+    .withColumn("view_duration", (unix_timestamp("end_timestamp") - unix_timestamp("start_timestamp")) \
+                .cast("double"))
 
 # Join with static campaign data
 joined_df = parsed_df.join(broadcast(campaign_df), "campaign_id")
