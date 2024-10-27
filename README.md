@@ -19,7 +19,7 @@
 * Create Kafka Topic view_log
 
 
-    `docker exec -it big-data-dev-challenge-kafka-1 /bin/bash`
+    `docker exec -it big-data-challenge-kafka-1 /bin/bash`
 
 
     `kafka-topics.sh --create --topic view_log --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1`
@@ -27,17 +27,17 @@
 * Run the Kafka Simulator to Produce Messages
 
     
-   `docker exec -it big-data-dev-challenge-spark-1 python /main/kafka_simulator.py`
+   `docker exec -it big-data-challenge-spark-1 python /main/kafka_simulator.py`
 
 
 * Run the Spark Structured Streaming Job
 
-`docker exec -it big-data-dev-challenge-spark-1 spark-submit /main/campaigns_stream.py`
+`docker exec -it big-data-challenge-spark-1 spark-submit /main/campaigns_stream.py`
 
 
 * View the Output Files
 
-`docker cp big-data-dev-challenge-spark-1:/resources/output/campaignStreaming ./output`
+`docker cp big-data-challenge-spark-1:/resources/output/campaignStreaming ./output`
 
 * View the Output in the output Kafka Topic 
 

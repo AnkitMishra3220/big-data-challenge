@@ -18,7 +18,6 @@ class TestCampaignsStream(unittest.TestCase):
     def test_schema_definitions(self):
         # Test campaign_schema
         expected_campaign_schema = StructType([
-            StructField("campaign", StringType(), True),
             StructField("network_id", IntegerType(), True),
             StructField("campaign_id", IntegerType(), True),
             StructField("campaign_name", StringType(), True),

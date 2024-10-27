@@ -1,33 +1,37 @@
 import json
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window, avg, count, expr
+from pyspark.sql.functions import from_json, col, window, avg, count, expr, broadcast
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, TimestampType, DoubleType
 
 # Load configuration
 with open('./config/config.json', 'r') as config_file:
     config = json.load(config_file)
 
+# Create SparkSession with configuration
 spark = SparkSession.builder \
     .appName(config['app_name']) \
+    .config("spark.sql.adaptive.enabled", "true") \
+    .config("spark.sql.shuffle.partitions", "200") \
     .getOrCreate()
 
 # Define schemas
 campaign_schema = StructType([
     StructField("network_id", StringType(), True),
-    StructField("campaign_id", IntegerType(), True),
+    StructField("campaign_id", IntegerType(), False),
     StructField("campaign_name", StringType(), True),
 ])
 
 view_log_schema = StructType([
-    StructField("view_id", IntegerType(), True),
-    StructField("start_timestamp", TimestampType(), True),
-    StructField("end_timestamp", TimestampType(), True),
+    StructField("view_id", IntegerType(), False),
+    StructField("start_timestamp", TimestampType(), False),
+    StructField("end_timestamp", TimestampType(), False),
     StructField("banner_id", IntegerType(), True),
-    StructField("campaign_id", IntegerType(), True),
+    StructField("campaign_id", IntegerType(), False),
 ])
 
 # Load static campaign data
 campaign_df = spark.read.csv(config['campaign_data_path'], schema=campaign_schema, header=True)
+campaign_df.cache()  # Cache the static data
 
 # Read from Kafka
 view_log_df = spark \
@@ -36,16 +40,19 @@ view_log_df = spark \
     .option("kafka.bootstrap.servers", config['kafka_bootstrap_servers']) \
     .option("subscribe", config['kafka_topic_input']) \
     .option("startingOffsets", config['kafka_starting_offsets']) \
+    .option("maxOffsetsPerTrigger", 10000)  \
     .load()
 
 # Parse JSON data and create view duration
 view_log_df = view_log_df.select(from_json(col("value").cast("string"), view_log_schema).alias("data")) \
     .select("data.*") \
-    .withColumn("view_duration", (col("end_timestamp").cast("long") - col("start_timestamp")
-                                  .cast("long")).cast(DoubleType()))
+    .withColumn("view_duration", expr("cast((end_timestamp - start_timestamp) as double)"))
+
+# show view_log_df on console
+view_log_df.printSchema()
 
 # Join with static campaign data
-joined_df = view_log_df.join(campaign_df, "campaign_id")
+joined_df = view_log_df.join(broadcast(campaign_df), "campaign_id")
 
 # Aggregation logic
 agg_df = joined_df.withWatermark("start_timestamp", config['watermark_delay']) \
