@@ -9,8 +9,8 @@
 *  Clone the repo and cd into the folder
 
 
-    git clone https://github.com/AnkitMishra3220/big_data_dev_challenge.git
-    cd big-data-dev-challenge/
+    `git clone https://github.com/AnkitMishra3220/big_data_dev_challenge.git`
+    `cd big-data-dev-challenge/`
 
 * Start Kafka, Zookeeper, and Spark with Docker
 
@@ -19,10 +19,10 @@
 * Create Kafka Topic view_log
 
 
-    docker exec -it big-data-dev-challenge-kafka-1 /bin/bash
+    `docker exec -it big-data-dev-challenge-kafka-1 /bin/bash`
 
 
-    kafka-topics.sh --create --topic view_log --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+    `kafka-topics.sh --create --topic view_log --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1`
 
 * Run the Kafka Simulator to Produce Messages
 
