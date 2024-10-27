@@ -1,0 +1,13 @@
+{
+    "app_name": "campaignStreaming",
+    "campaign_data_path": "resources/input/campaign_data.csv",
+    "kafka_bootstrap_servers": "kafka:9092",
+    "kafka_topic_input": "view_log",
+    "kafka_topic_output": "view_log_output",
+    "kafka_starting_offsets": "latest",
+    "watermark_delay": "10 seconds",
+    "window_duration": "1 minute",
+    "output_path": "resources/output/campaignStreaming",
+    "checkpoint_location": "resources/spark_streaming_checkpoint/campaignStreaming",
+    "trigger_processing_time": "1 minute"
+}
