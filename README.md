@@ -41,5 +41,7 @@
 
 * View the Output in the output Kafka Topic 
 
+`docker exec -it big-data-challenge-kafka-1 /bin/bash`
+
 `kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic view_log_output --from-beginning`
 
